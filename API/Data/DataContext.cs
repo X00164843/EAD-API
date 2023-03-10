@@ -15,6 +15,10 @@ namespace StudentHub.Data
 				.HasMany(u => u.OwnedModules)
 				.WithOne(m => m.Owner);
 
+			modelBuilder.Entity<Module>()
+				.HasMany(m => m.Sections)
+				.WithOne(s => s.Module);
+
 			modelBuilder.Entity<ModuleUser>()
 				.HasKey(mu => new { mu.UserId, mu.ModuleId });
 
@@ -33,5 +37,6 @@ namespace StudentHub.Data
 
 		public DbSet<User> Users { get; set; }
 		public DbSet<Module> Modules { get; set; }
+		public DbSet<Section> Sections { get; set; }
 	}
 }
