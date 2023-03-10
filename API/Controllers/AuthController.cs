@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using StudentHub.Data;
 using StudentHub.DTOs;
 using StudentHub.Models;
 using System.Data;
@@ -14,23 +16,30 @@ namespace StudentHub.Controllers
 	[ApiController]
 	public class AuthController : ControllerBase
 	{
-		public static UserModel user  = new UserModel();
 		private readonly IConfiguration _configuration;
+		private readonly DataContext _dataContext;
 
-		public AuthController(IConfiguration configuration) 
+		public AuthController(IConfiguration configuration, DataContext dataContext) 
 		{
 			_configuration = configuration;
+			_dataContext = dataContext;
 		}
 
 		[HttpPost("register")]
 		public async Task<ActionResult<UserModel>> Register(UserDTO request)
 		{
+			UserModel user = new UserModel();
+
 			CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
+			user.Id = Guid.NewGuid();
 			user.Username = request.Username;
 			user.PasswordHash = passwordHash;
 			user.PasswordSalt = passwordSalt;
 			user.Role = request.Role;
+
+			_dataContext.Users.Add(user);
+			await _dataContext.SaveChangesAsync();
 
 			return Ok(user);
 		}
@@ -38,7 +47,9 @@ namespace StudentHub.Controllers
 		[HttpPost("login")]
 		public async Task<ActionResult<string>> Login(UserDTO request)
 		{
-			if (user.Username != request.Username)
+			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
+
+			if (user == null)
 			{
 				return BadRequest("User not found");
 			}

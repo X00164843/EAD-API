@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Swagger;
 using Microsoft.OpenApi.Models;
+using StudentHub.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace StudentHub
 {
@@ -25,6 +27,11 @@ namespace StudentHub
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddControllers();
+
+			services.AddDbContext<DataContext>(options =>
+			{
+				options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+			});
 
 			services.AddSwaggerGen(c =>
 			{
