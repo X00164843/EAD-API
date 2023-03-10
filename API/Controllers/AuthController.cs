@@ -91,13 +91,13 @@ namespace StudentHub.Controllers
 		{
 			string role;
 
-			if (user.Role.ToString() == "0")
+			if (user.Role == 0)
 			{
 				role = "Student";
 			}
 			else
 			{
-				role = "Admin";
+				role = "Teacher";
 			}
 
 			List<Claim> claims = new List<Claim>

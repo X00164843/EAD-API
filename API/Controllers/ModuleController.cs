@@ -19,7 +19,7 @@ namespace StudentHub.Controllers
 			_dataContext = dataContext;
 		}
 
-		[HttpPost("create"), Authorize(Roles = "Admin")]
+		[HttpPost("create"), Authorize(Roles = "Teacher")]
 		public async Task<ActionResult<Module>> CreateModule(ModuleCreateDTO request)
 		{
 			var username = User.Identity.Name;
@@ -37,7 +37,7 @@ namespace StudentHub.Controllers
 			return Ok(module);
 		}
 
-		[HttpPost("join"), Authorize]
+		[HttpPost("join"), Authorize(Roles = "Student")]
 		public async Task<ActionResult> JoinModule(ModuleJoinDTO request)
 		{
 			var username = User.Identity.Name;
@@ -47,7 +47,7 @@ namespace StudentHub.Controllers
 
 			if (module == null)
 			{
-				return BadRequest("Can't find module.");
+				return BadRequest("Couldn't find module.");
 			}
 
 			var userInModule = _dataContext.ModuleUser.FirstOrDefault(mu => mu.Module == module && mu.User == user);
@@ -66,6 +66,40 @@ namespace StudentHub.Controllers
 			};
 
 			_dataContext.Add(moduleUser);
+			await _dataContext.SaveChangesAsync();
+
+			return Ok();
+		}
+
+		[HttpPost("create-section"), Authorize(Roles = "Teacher")]
+		public async Task<ActionResult> CreateSection(SectionCreateDTO request)
+		{
+			var module = _dataContext.Modules.FirstOrDefault(m => m.ModuleId == request.ModuleId);
+
+			if (module == null)
+			{
+				return BadRequest("Couldn't find module.");
+			}
+
+			var username = User.Identity.Name;
+			var user = _dataContext.Users.FirstOrDefault(u => u.Username == username);
+
+			if (module.Owner != user)
+			{
+				return BadRequest("User does not own module.");
+			}
+
+			Section section = new Section()
+			{
+				SectionId = Guid.NewGuid(),
+				Title = request.Title,
+				Body = request.Body,
+				DateCreated = DateTime.UtcNow,
+				DueDate = request.DueDate,
+				Module = module
+			};
+
+			_dataContext.Add(section);
 			await _dataContext.SaveChangesAsync();
 
 			return Ok();
