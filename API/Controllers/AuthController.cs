@@ -26,7 +26,7 @@ namespace StudentHub.Controllers
 		}
 
 		[HttpPost("register")]
-		public async Task<ActionResult<User>> Register(UserDTO request)
+		public async Task<ActionResult<User>> Register(UserRegisterDTO request)
 		{
 			var userExists = await _dataContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
 
@@ -52,7 +52,7 @@ namespace StudentHub.Controllers
 		}
 
 		[HttpPost("login")]
-		public async Task<ActionResult<string>> Login(UserDTO request)
+		public async Task<ActionResult<string>> Login(UserSigninDTO request)
 		{
 			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
 
@@ -89,10 +89,21 @@ namespace StudentHub.Controllers
 
 		private string CreateToken(User user)
 		{
+			string role;
+
+			if (user.Role.ToString() == "0")
+			{
+				role = "Student";
+			}
+			else
+			{
+				role = "Admin";
+			}
+
 			List<Claim> claims = new List<Claim>
 			{
 				new Claim(ClaimTypes.Name, user.Username),
-				new Claim(ClaimTypes.Role, user.Role.ToString())
+				new Claim(ClaimTypes.Role, role)
 			};
 
 			var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_configuration.GetConnectionString("Token")));

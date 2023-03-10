@@ -38,5 +38,6 @@ namespace StudentHub.Data
 		public DbSet<User> Users { get; set; }
 		public DbSet<Module> Modules { get; set; }
 		public DbSet<Section> Sections { get; set; }
+		public DbSet<ModuleUser> ModuleUser { get; set; }
 	}
 }

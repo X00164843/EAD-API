@@ -12,6 +12,11 @@ using Swashbuckle.AspNetCore.Swagger;
 using Microsoft.OpenApi.Models;
 using StudentHub.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Swashbuckle.AspNetCore.Filters;
+using System.Text.Json.Serialization;
 
 namespace StudentHub
 {
@@ -26,19 +31,42 @@ namespace StudentHub
 
 		public void ConfigureServices(IServiceCollection services)
 		{
-			services.AddControllers();
+			services.AddControllers().AddJsonOptions(options =>
+			{
+				options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+			});
 
 			services.AddDbContext<DataContext>(options =>
 			{
 				options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
 			});
 
-			services.AddSwaggerGen(c =>
+			services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+				.AddJwtBearer(options =>
+				{
+					options.TokenValidationParameters = new TokenValidationParameters
+					{
+						ValidateIssuerSigningKey = true,
+						IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
+							.GetBytes(Configuration.GetConnectionString("Token"))),
+						ValidateAudience = false,
+						ValidateIssuer = false
+					};
+				});
+
+			services.AddSwaggerGen(options =>
 			{
-				c.SwaggerDoc("v1", new OpenApiInfo { Title = "StudentHub API", Version = "v1" });
+				options.SwaggerDoc("v1", new OpenApiInfo { Title = "StudentHub API", Version = "v1" });
+				options.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
+				{
+					Description = "Bearer header authorization scheme",
+					In = ParameterLocation.Header,
+					Name = "Authorization",
+					Type = SecuritySchemeType.ApiKey
+				});
+				options.OperationFilter<SecurityRequirementsOperationFilter>();
 			});
 		}
-
 
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 		{
@@ -57,6 +85,9 @@ namespace StudentHub
 			app.UseStaticFiles();
 			app.UseRouting();
 			app.UseCors();
+
+			app.UseAuthentication();
+			app.UseAuthorization();
 
 			app.UseEndpoints(endpoints =>
 			{
