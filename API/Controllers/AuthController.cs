@@ -26,13 +26,20 @@ namespace StudentHub.Controllers
 		}
 
 		[HttpPost("register")]
-		public async Task<ActionResult<UserModel>> Register(UserDTO request)
+		public async Task<ActionResult<User>> Register(UserDTO request)
 		{
-			UserModel user = new UserModel();
+			var userExists = await _dataContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
+
+			if (userExists != null)
+			{
+				return BadRequest("User already exists.");
+			}
+
+			User user = new User();
 
 			CreatePasswordHash(request.Password, out byte[] passwordHash, out byte[] passwordSalt);
 
-			user.Id = Guid.NewGuid();
+			user.UserId = Guid.NewGuid();
 			user.Username = request.Username;
 			user.PasswordHash = passwordHash;
 			user.PasswordSalt = passwordSalt;
@@ -51,12 +58,12 @@ namespace StudentHub.Controllers
 
 			if (user == null)
 			{
-				return BadRequest("User not found");
+				return BadRequest("User not found.");
 			}
 
 			if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
 			{
-				return BadRequest("Wrong password");
+				return BadRequest("Wrong password.");
 			}
 
 			string token = CreateToken(user);
@@ -80,7 +87,7 @@ namespace StudentHub.Controllers
 			return computedHash.SequenceEqual(passwordHash);
 		}
 
-		private string CreateToken(UserModel user)
+		private string CreateToken(User user)
 		{
 			List<Claim> claims = new List<Claim>
 			{
