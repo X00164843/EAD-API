@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using StudentHub.Data;
 using StudentHub.DTOs;
 using StudentHub.Models;
@@ -103,6 +104,52 @@ namespace StudentHub.Controllers
 			await _dataContext.SaveChangesAsync();
 
 			return Ok();
+		}
+
+		[HttpGet("{moduleId}"), Authorize]
+		public async Task<ActionResult> GetModule(string moduleId)
+		{
+			var module = _dataContext.Modules.Include(m => m.Owner)
+											 .Include(m => m.Sections).ToList()
+											 .FirstOrDefault(m => m.ModuleId.ToString() == moduleId);
+
+			if (module == null)
+			{
+				return BadRequest("Module not found.");
+			}
+
+			var username = User.Identity.Name;
+			var user = _dataContext.Users.FirstOrDefault(u => u.Username == username);
+
+			bool userInModule = _dataContext.ModuleUser.Any(mu => mu.ModuleId.ToString() == moduleId && mu.User == user);
+
+			if (!userInModule && !(module.Owner == user))
+			{
+				return BadRequest("You are not in this module");
+			}
+
+			List<SectionGetDTO> sections = new();
+
+			foreach (var section in module.Sections)
+			{
+				sections.Add(new SectionGetDTO()
+				{
+					Title = section.Title,
+					Body = section.Body,
+					DueDate = section.DueDate,
+					DateCreated = section.DateCreated
+				});
+			}
+
+			ModuleGetOneDTO moduleDto = new()
+			{
+				ModuleId = Guid.NewGuid(),
+				Name = module.Name,
+				Owner = module.Owner.Username,
+				Sections = sections
+			};
+
+			return Ok(moduleDto);
 		}
 	}
 }

@@ -47,53 +47,5 @@ namespace StudentHub.Controllers
 
 			return Ok(modules);
 		}
-
-		[HttpGet("module/{moduleId}"), Authorize]
-		public async Task<ActionResult> GetModule(string moduleId)
-		{
-			var module = _dataContext.Modules.FirstOrDefault(m => m.ModuleId.ToString() == moduleId);
-
-			if (module == null)
-			{
-				return BadRequest("Module not found.");
-			}
-
-			var username = User.Identity.Name;
-			var user = _dataContext.Users.FirstOrDefault(u => u.Username == username);
-
-			bool userInModule = _dataContext.ModuleUser.Any(mu => mu.ModuleId.ToString() == moduleId && mu.User == user);
-
-			if (!userInModule && !(module.Owner == user))
-			{
-				return BadRequest("You are not in this module");
-			}
-
-			List<SectionGetDTO> sections = new ();
-
-			if (module.Sections != null)
-			{
-				foreach (var section in module.Sections)
-				{
-					sections.Add(new SectionGetDTO()
-					{
-						Title = section.Title,
-						Body = section.Body,
-						DueDate = section.DueDate,
-						DateCreated = section.DateCreated
-					});
-				}
-			}
-
-			//TODO  Owner = module.Owner.Username giving null pointer exceptions
-			ModuleGetOneDTO moduleDto = new()
-			{
-				ModuleId = Guid.NewGuid(),
-				Name = module.Name,
-				Owner = module.Owner.Username,
-				Sections = sections
-			};
-
-			return Ok(moduleDto);
-		}
 	}
 }
