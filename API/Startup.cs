@@ -24,6 +24,8 @@ namespace StudentHub
 	{
 		private IConfiguration Configuration { get; }
 
+		private readonly string corsPolicy = "AllowOrigins";
+
 		public Startup(IConfiguration configuration)
 		{
 			Configuration = configuration;
@@ -66,6 +68,17 @@ namespace StudentHub
 				});
 				options.OperationFilter<SecurityRequirementsOperationFilter>();
 			});
+
+			services.AddCors(options =>
+			{
+				options.AddPolicy(name: corsPolicy,
+								  builder =>
+								  {
+									  builder.AllowAnyHeader()
+											 .AllowAnyOrigin()
+											 .AllowAnyMethod();
+								  });
+			});
 		}
 
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -84,7 +97,7 @@ namespace StudentHub
 
 			app.UseStaticFiles();
 			app.UseRouting();
-			app.UseCors();
+			app.UseCors(corsPolicy);
 
 			app.UseAuthentication();
 			app.UseAuthorization();

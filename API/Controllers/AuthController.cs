@@ -26,13 +26,14 @@ namespace StudentHub.Controllers
 		}
 
 		[HttpPost("register")]
-		public async Task<ActionResult<User>> Register(UserRegisterDTO request)
+		public async Task<IActionResult> Register(UserRegisterDTO request)
 		{
 			var userExists = await _dataContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
 
 			if (userExists != null)
 			{
-				return BadRequest("User already exists.");
+				Response.StatusCode = StatusCodes.Status400BadRequest;
+				return new JsonResult("User already exists.");
 			}
 
 			User user = new User();
@@ -48,27 +49,31 @@ namespace StudentHub.Controllers
 			_dataContext.Users.Add(user);
 			await _dataContext.SaveChangesAsync();
 
-			return Ok(user);
+			Response.StatusCode = StatusCodes.Status201Created;
+			return new JsonResult("Account created successfully.");
 		}
 
 		[HttpPost("login")]
-		public async Task<ActionResult<string>> Login(UserSigninDTO request)
+		public async Task<IActionResult> Login(UserSigninDTO request)
 		{
 			var user = await _dataContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
 
 			if (user == null)
 			{
-				return BadRequest("User not found.");
+				Response.StatusCode = StatusCodes.Status400BadRequest;
+				return new JsonResult("User not found.");
 			}
 
 			if (!VerifyPasswordHash(request.Password, user.PasswordHash, user.PasswordSalt))
 			{
-				return BadRequest("Wrong password.");
+				Response.StatusCode = StatusCodes.Status400BadRequest;
+				return new JsonResult("Wrong password.");
 			}
 
 			string token = CreateToken(user);
 
-			return Ok(token);
+			Response.StatusCode = StatusCodes.Status200OK;
+			return new JsonResult(token);
 		}
 
 		private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
@@ -112,7 +117,7 @@ namespace StudentHub.Controllers
 
 			var token = new JwtSecurityToken(
 				claims: claims,
-				expires: DateTime.Now.AddDays(1),
+				expires: DateTime.Now.AddDays(365),
 				signingCredentials: creds
 			);
 
