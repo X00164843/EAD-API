@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Azure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentHub.Data;
 using StudentHub.DTOs;
@@ -19,7 +20,7 @@ namespace StudentHub.Controllers
 		}
 
 		[HttpGet("joined-modules"), Authorize(Roles = "Student")]
-		public async Task<ActionResult> GetJoinedModules()
+		public async Task<IActionResult> GetJoinedModules()
 		{
 			var username = User.Identity.Name;
 			var user = _dataContext.Users.FirstOrDefault(u => u.Username == username);
@@ -32,11 +33,12 @@ namespace StudentHub.Controllers
 																	.Where(m => moduleIds.Contains(m.ModuleId))
 																	.Select(m => new ModuleGetAllDTO { ModuleId = m.ModuleId, Name = m.Name });
 
-			return Ok(modules);
+			Response.StatusCode = StatusCodes.Status200OK;
+			return new JsonResult(modules);
 		}
 
 		[HttpGet("owned-modules"), Authorize(Roles = "Teacher")]
-		public async Task<ActionResult> GetOwnedModules()
+		public async Task<IActionResult> GetOwnedModules()
 		{
 			var username = User.Identity.Name;
 			var user = _dataContext.Users.FirstOrDefault(u => u.Username == username);
@@ -45,7 +47,8 @@ namespace StudentHub.Controllers
 																	.Where(m => m.Owner == user)
 																	.Select(m => new ModuleGetAllDTO { ModuleId = m.ModuleId, Name = m.Name });
 
-			return Ok(modules);
+			Response.StatusCode = StatusCodes.Status200OK;
+			return new JsonResult(modules);
 		}
 	}
 }

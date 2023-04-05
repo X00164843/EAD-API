@@ -72,8 +72,14 @@ namespace StudentHub.Controllers
 
 			string token = CreateToken(user);
 
+			UserSigninResponseDTO response = new UserSigninResponseDTO()
+			{
+				accessToken = token,
+				role = user.Role
+			};
+
 			Response.StatusCode = StatusCodes.Status200OK;
-			return new JsonResult(token);
+			return new JsonResult(response);
 		}
 
 		private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
