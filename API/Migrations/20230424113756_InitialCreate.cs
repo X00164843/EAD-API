@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace API.Migrations
 {
     /// <inheritdoc />
-    public partial class AddedModules : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -31,7 +31,6 @@ namespace API.Migrations
                 columns: table => new
                 {
                     ModuleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OwnerUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
@@ -68,6 +67,28 @@ namespace API.Migrations
                         principalColumn: "UserId");
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Sections",
+                columns: table => new
+                {
+                    SectionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Body = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModuleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Sections", x => x.SectionId);
+                    table.ForeignKey(
+                        name: "FK_Sections_Modules_ModuleId",
+                        column: x => x.ModuleId,
+                        principalTable: "Modules",
+                        principalColumn: "ModuleId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Modules_OwnerUserId",
                 table: "Modules",
@@ -77,6 +98,11 @@ namespace API.Migrations
                 name: "IX_ModuleUser_ModuleId",
                 table: "ModuleUser",
                 column: "ModuleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Sections_ModuleId",
+                table: "Sections",
+                column: "ModuleId");
         }
 
         /// <inheritdoc />
@@ -84,6 +110,9 @@ namespace API.Migrations
         {
             migrationBuilder.DropTable(
                 name: "ModuleUser");
+
+            migrationBuilder.DropTable(
+                name: "Sections");
 
             migrationBuilder.DropTable(
                 name: "Modules");

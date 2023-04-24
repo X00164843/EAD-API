@@ -12,8 +12,8 @@ using StudentHub.Data;
 namespace API.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230310135818_AddedModules")]
-    partial class AddedModules
+    [Migration("20230424113756_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -30,9 +30,6 @@ namespace API.Migrations
                     b.Property<Guid>("ModuleId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("DateCreated")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -61,6 +58,36 @@ namespace API.Migrations
                     b.HasIndex("ModuleId");
 
                     b.ToTable("ModuleUser");
+                });
+
+            modelBuilder.Entity("StudentHub.Models.Section", b =>
+                {
+                    b.Property<Guid>("SectionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ModuleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("SectionId");
+
+                    b.HasIndex("ModuleId");
+
+                    b.ToTable("Sections");
                 });
 
             modelBuilder.Entity("StudentHub.Models.User", b =>
@@ -119,9 +146,22 @@ namespace API.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("StudentHub.Models.Section", b =>
+                {
+                    b.HasOne("StudentHub.Models.Module", "Module")
+                        .WithMany("Sections")
+                        .HasForeignKey("ModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Module");
+                });
+
             modelBuilder.Entity("StudentHub.Models.Module", b =>
                 {
                     b.Navigation("ModuleUsers");
+
+                    b.Navigation("Sections");
                 });
 
             modelBuilder.Entity("StudentHub.Models.User", b =>
