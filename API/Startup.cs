@@ -40,7 +40,7 @@ namespace StudentHub
 
 			services.AddDbContext<DataContext>(options =>
 			{
-				options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+				options.UseSqlServer(Configuration.GetConnectionString("AZURE_SQL_CONNECTION"));
 			});
 
 			services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
